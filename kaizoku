@@ -1,0 +1,83 @@
+#!/usr/bin/python3 
+
+from instagrapi import Client 
+from argparse import ArgumentParser
+import os, config 
+from urllib import request 
+from string import ascii_lowercase 
+from random import choice 
+
+cl = Client() 
+session_id = config.parse_conf() 
+cl.login_by_sessionid(session_id) 
+
+def rand_gen():
+
+    letters = ascii_lowercase
+    name = ""
+
+    for i in range(10):
+        name += choice(letters)
+
+    return name
+
+def parse():
+
+    parser = ArgumentParser() 
+    parser.add_argument('url',type=str,help="url of media",nargs='*') 
+    parser.add_argument('-d','--destination',type=str,help="the directory in which to save downloaded files",nargs="?") 
+    
+    arguments = parser.parse_args() 
+    return arguments
+
+
+args = parse() 
+
+if args.url: 
+
+    for url in args.url:
+        media_id = cl.media_pk_from_url(url) 
+        media_dict = cl.media_info(media_id).dict()
+
+        if media_dict['media_type'] == 2: 
+            video_url = media_dict['video_url'] 
+            file_name = rand_gen() + ".mp4" 
+
+            if args.destination:
+                file_name = os.path.join(args.destination,file_name) 
+
+            request.urlretrieve(video_url,file_name) 
+
+        if media_dict['media_type'] == 1: 
+            image_url = media_dict['thumbnail_url'] 
+            file_name = rand_gen() + ".jpg" 
+
+            if args.destination:
+                file_name = os.path.join(args.destination,file_name) 
+
+            request.urlretrieve(image_url,file_name) 
+
+        if media_dict['media_type'] == 8: 
+
+            for element in media_dict['resources']: 
+                if element['media_type'] == 1: 
+
+                    image_url = element['thumbnail_url'] 
+                    file_name = rand_gen() + ".jpg" 
+
+                    if args.destination:
+                        file_name = os.path.join(args.destination,file_name) 
+
+                    request.urlretrieve(image_url,file_name) 
+
+                if element['media_type'] == 2: 
+
+                    video_url = element['video_url'] 
+                    file_name = rand_gen() + ".mp4" 
+
+                    if args.destination:
+                        file_name = os.path.join(args.destination,file_name) 
+
+                    request.urlretrieve(video_url,file_name)
+    
+

@@ -22,10 +22,32 @@ def rand_gen():
 
     return name
 
+def get_video(url,dest): 
+    
+    print("[kaizoku] Downloading video..") 
+    file_name = rand_gen() + ".mp4" 
+
+    if dest:
+        file_name = os.path.join(dest,file_name) 
+
+    request.urlretrieve(url,file_name) 
+
+def get_img(url,dest):
+
+    print("[kaizoku] Downloading image..") 
+    file_name = rand_gen() + ".jpg" 
+
+    if dest:
+        file_name = os.path.join(dest,file_name) 
+
+    request.urlretrieve(url,file_name) 
+
+
 def parse():
 
     parser = ArgumentParser() 
     parser.add_argument('url',type=str,help="url of media",nargs='*') 
+    parser.add_argument('-ga', '--get-all-stories', type=str, help="username from which to download all stories") 
     parser.add_argument('-d','--destination',type=str,help="the directory in which to save downloaded files",nargs="?") 
     
     arguments = parser.parse_args() 
@@ -42,7 +64,6 @@ if args.url:
         story = re.search("^https?://www.instagram.com/stories*",url) 
 
         if story: 
-
             story_arr = url.rstrip('/') 
             story_arr = story_arr.split('/') 
             
@@ -50,70 +71,52 @@ if args.url:
 
             if info.video_url: 
 
-                video_url = info.video_url
-                file_name = rand_gen() + ".mp4" 
-
-                if args.destination:
-                    file_name = os.path.join(args.destination,file_name) 
-
-                request.urlretrieve(video_url,file_name) 
+                get_video(info.video_url,args.destination) 
 
             elif info.thumbnail_url: 
 
-                image_url = info.thumbnail_url
-                file_name = rand_gen() + ".jpg" 
-
-                if args.destination:
-                    file_name = os.path.join(args.destination,file_name) 
-
-                request.urlretrieve(image_url,file_name) 
-
+                get_img(info.thumbnail_url,args.destination)
 
         else:
-
             media_id = cl.media_pk_from_url(url) 
             media_dict = cl.media_info(media_id).dict()
 
         if media_dict: 
 
             if media_dict['media_type'] == 2: 
-                video_url = media_dict['video_url'] 
-                file_name = rand_gen() + ".mp4" 
 
-                if args.destination:
-                    file_name = os.path.join(args.destination,file_name) 
-
-                request.urlretrieve(video_url,file_name) 
+                get_video(media_dict['video_url'],args.destination) 
 
             if media_dict['media_type'] == 1: 
-                image_url = media_dict['thumbnail_url'] 
-                file_name = rand_gen() + ".jpg" 
 
-                if args.destination:
-                    file_name = os.path.join(args.destination,file_name) 
-
-                request.urlretrieve(image_url,file_name) 
+                get_img(media_dict['thumbnail_url'],args.destination) 
 
             if media_dict['media_type'] == 8: 
 
                 for element in media_dict['resources']: 
                     if element['media_type'] == 1: 
 
-                        image_url = element['thumbnail_url'] 
-                        file_name = rand_gen() + ".jpg" 
-
-                        if args.destination:
-                            file_name = os.path.join(args.destination,file_name) 
-
-                        request.urlretrieve(image_url,file_name) 
+                        get_img(element['thumbnail_url'],args.destination)
 
                     if element['media_type'] == 2: 
+                        
+                        get_video(element['video_url'],args.destination) 
 
-                        video_url = element['video_url'] 
-                        file_name = rand_gen() + ".mp4" 
+if args.get_all_stories:
 
-                        if args.destination:
-                            file_name = os.path.join(args.destination,file_name) 
+    userinfo = cl.user_info_by_username(args.get_all_stories) 
+    story_info = cl.user_stories(userinfo.pk) 
 
-                        request.urlretrieve(video_url,file_name)
+    for story in story_info: 
+
+        if story.video_url: 
+
+            get_video(story.video_url,args.destination) 
+
+        elif story.thumbnail_url: 
+
+            get_img(story.thumbnail_url,args.destination)
         
+
+    
+

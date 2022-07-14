@@ -9,8 +9,6 @@ from random import choice
 import re 
 
 cl = Client() 
-session_id = config.parse_conf() 
-cl.login_by_sessionid(session_id) 
 
 def rand_gen():
 
@@ -49,12 +47,24 @@ def parse():
     parser.add_argument('url',type=str,help="url of media",nargs='*') 
     parser.add_argument('-ga', '--get-all-stories', type=str, help="username from which to download all stories") 
     parser.add_argument('-d','--destination',type=str,help="the directory in which to save downloaded files",nargs="?") 
+    parser.add_argument('--cookies-from-browser',type=str,help="name of the browser from which to import cookies") 
     
     arguments = parser.parse_args() 
     return arguments
 
 
 args = parse() 
+session_id = "" 
+
+if args.cookies_from_browser: 
+
+    session_id = config.get_cookies(args.cookies_from_browser) 
+
+else:
+    session_id = config.parse_conf()
+
+cl.login_by_sessionid(session_id) 
+
 
 if args.url: 
     
@@ -116,7 +126,4 @@ if args.get_all_stories:
         elif story.thumbnail_url: 
 
             get_img(story.thumbnail_url,args.destination)
-        
-
-    
 

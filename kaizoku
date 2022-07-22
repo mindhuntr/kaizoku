@@ -65,6 +65,23 @@ else:
 
 cl.login_by_sessionid(session_id) 
 
+def get_story(arr):
+    
+    try: 
+        info = cl.story_info(arr[-1]) 
+        return info
+    
+    except: 
+
+        info = {}
+        userinfo = cl.user_info_by_username(arr[-2]) 
+        story_info = cl.user_stories(userinfo.pk) 
+
+        for story in story_info:
+            id_arr = story.id.split('_') 
+
+            if id_arr[0] == arr[-1]: 
+                return story
 
 if args.url: 
     
@@ -77,7 +94,8 @@ if args.url:
             story_arr = url.rstrip('/') 
             story_arr = story_arr.split('/') 
             
-            info = cl.story_info(story_arr[-1]) 
+            # info = cl.story_info(story_arr[-1]) 
+            info = get_story(story_arr)
 
             if info.video_url: 
 

@@ -20,20 +20,28 @@ def rand_gen():
 
     return name
 
-def get_video(url,dest): 
+def get_video(url,dest,prefix=""): 
     
     print("[kaizoku] Downloading video..") 
-    file_name = rand_gen() + ".mp4" 
+
+    if prefix:
+        file_name = prefix + ".mp4"
+    else:
+        file_name = rand_gen() + ".mp4" 
 
     if dest:
         file_name = os.path.join(dest,file_name) 
 
     request.urlretrieve(url,file_name) 
 
-def get_img(url,dest):
+def get_img(url,dest,prefix=""):
 
     print("[kaizoku] Downloading image..") 
-    file_name = rand_gen() + ".jpg" 
+
+    if prefix:
+        file_name = prefix + ".jpg"
+    else:
+        file_name = rand_gen() + ".jpg" 
 
     if dest:
         file_name = os.path.join(dest,file_name) 
@@ -51,19 +59,6 @@ def parse():
     
     arguments = parser.parse_args() 
     return arguments
-
-
-args = parse() 
-session_id = "" 
-
-if args.cookies_from_browser: 
-
-    session_id = config.get_cookies(args.cookies_from_browser) 
-
-else:
-    session_id = config.parse_conf()
-
-cl.login_by_sessionid(session_id) 
 
 def get_story(arr):
     
@@ -83,6 +78,18 @@ def get_story(arr):
             if id_arr[0] == arr[-1]: 
                 return story
 
+
+args = parse() 
+session_id = "" 
+
+if args.cookies_from_browser: 
+    session_id = config.get_cookies(args.cookies_from_browser) 
+
+else:
+    session_id = config.parse_conf()
+cl.login_by_sessionid(session_id) 
+
+
 if args.url: 
     
     media_dict = {} 
@@ -94,15 +101,12 @@ if args.url:
             story_arr = url.rstrip('/') 
             story_arr = story_arr.split('/') 
             
-            # info = cl.story_info(story_arr[-1]) 
             info = get_story(story_arr)
 
             if info.video_url: 
-
                 get_video(info.video_url,args.destination) 
 
             elif info.thumbnail_url: 
-
                 get_img(info.thumbnail_url,args.destination)
 
         else:
@@ -112,22 +116,18 @@ if args.url:
         if media_dict: 
 
             if media_dict['media_type'] == 2: 
-
                 get_video(media_dict['video_url'],args.destination) 
 
             if media_dict['media_type'] == 1: 
-
                 get_img(media_dict['thumbnail_url'],args.destination) 
 
             if media_dict['media_type'] == 8: 
 
                 for element in media_dict['resources']: 
                     if element['media_type'] == 1: 
-
                         get_img(element['thumbnail_url'],args.destination)
 
                     if element['media_type'] == 2: 
-                        
                         get_video(element['video_url'],args.destination) 
 
 if args.get_all_stories:
@@ -135,13 +135,15 @@ if args.get_all_stories:
     userinfo = cl.user_info_by_username(args.get_all_stories) 
     story_info = cl.user_stories(userinfo.pk) 
 
+    story_no = 1
     for story in story_info: 
-
         if story.video_url: 
-
-            get_video(story.video_url,args.destination) 
+            prefix = "story_" + str(story_no) 
+            get_video(story.video_url,args.destination,prefix) 
+            story_no += 1
 
         elif story.thumbnail_url: 
-
-            get_img(story.thumbnail_url,args.destination)
+            prefix = "story_" + str(story_no) 
+            get_img(story.thumbnail_url,args.destination,prefix)
+            story_no += 1
 

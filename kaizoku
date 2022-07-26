@@ -53,9 +53,10 @@ def parse():
 
     parser = ArgumentParser() 
     parser.add_argument('url',type=str,help="url of media",nargs='*') 
-    parser.add_argument('-ga', '--get-all-stories', type=str, help="username from which to download all stories") 
-    parser.add_argument('-d','--destination',type=str,help="the directory in which to save downloaded files",nargs="?") 
-    parser.add_argument('--cookies-from-browser',type=str,help="name of the browser from which to import cookies") 
+    parser.add_argument('-ga','--get-all-stories', type=str, help="username from which to download all stories") 
+    parser.add_argument('-s','--saved', type=int,help="the number of posts to fetch from saved messages") 
+    parser.add_argument('-d','--destination', type=str,help="the directory in which to save downloaded files",nargs="?") 
+    parser.add_argument('--cookies-from-browser', type=str,help="name of the browser from which to import cookies") 
     
     arguments = parser.parse_args() 
     return arguments
@@ -93,7 +94,6 @@ cl.login_by_sessionid(session_id)
 if args.url: 
     
     media_dict = {} 
-
     for url in args.url:
         story = re.search("^https?://www.instagram.com/stories*",url) 
 
@@ -146,4 +146,35 @@ if args.get_all_stories:
             prefix = "story_" + str(story_no) 
             get_img(story.thumbnail_url,args.destination,prefix)
             story_no += 1
+
+if args.saved:
+
+    collections = cl.collection_medias_by_name("All Posts") 
+    col_no = 1
+
+    for collection in collections[:args.saved]:
+        if collection.media_type == 2: 
+            prefix = "collection_" + str(col_no)
+            get_video(collection.video_url,args.destination,prefix) 
+            col_no += 1
+
+        if collection.media_type == 1: 
+            prefix = "collection_" + str(col_no)
+            get_img(collection.thumbnail_url,args.destination,prefix) 
+            col_no += 1
+
+        if collection.media_type == 8: 
+            album_no = 1
+            for element in collection.resources: 
+                if element.media_type == 1: 
+                    prefix = "collection_" + str(col_no) + "_" + str(album_no)
+                    get_img(element.thumbnail_url,args.destination,prefix)
+                    album_no += 1
+
+                if element.media_type == 2: 
+                    prefix = "collection_" + str(col_no) + "_" + str(album_no)
+                    get_video(element.video_url,args.destination,prefix) 
+                    album_no += 1
+
+            col_no += 1
 

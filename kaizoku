@@ -149,10 +149,10 @@ if args.get_all_stories:
 
 if args.saved:
 
-    collections = cl.collection_medias_by_name("All Posts") 
+    collections = cl.collection_medias('ALL_MEDIA_AUTO_COLLECTION',amount=args.saved) 
     col_no = 1
 
-    for collection in collections[:args.saved]:
+    for collection in collections:
         if collection.media_type == 2: 
             prefix = "collection_" + str(col_no)
             get_video(collection.video_url,args.destination,prefix) 

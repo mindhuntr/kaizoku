@@ -53,8 +53,8 @@ def parse():
 
     parser = ArgumentParser() 
     parser.add_argument('url',type=str,help="url of media",nargs='*') 
-    parser.add_argument('-ga','--get-all-stories', type=str, help="username from which to download all stories") 
-    parser.add_argument('-s','--saved', type=int,help="the number of posts to fetch from saved messages") 
+    parser.add_argument('-ga','--get-all-stories', type=str, help="usernames from which to download all stories",nargs="*") 
+    parser.add_argument('-s','--saved', type=int,help='the number of posts to fetch from saved messages (0 would fetch all)') 
     parser.add_argument('-d','--destination', type=str,help="the directory in which to save downloaded files",nargs="?") 
     parser.add_argument('--cookies-from-browser', type=str,help="name of the browser from which to import cookies") 
     
@@ -132,20 +132,22 @@ if args.url:
 
 if args.get_all_stories:
 
-    userinfo = cl.user_info_by_username(args.get_all_stories) 
-    story_info = cl.user_stories(userinfo.pk) 
+    for user in args.get_all_stories:
 
-    story_no = 1
-    for story in story_info: 
-        if story.video_url: 
-            prefix = "story_" + str(story_no) 
-            get_video(story.video_url,args.destination,prefix) 
-            story_no += 1
+        userinfo = cl.user_info_by_username(user) 
+        story_info = cl.user_stories(userinfo.pk) 
 
-        elif story.thumbnail_url: 
-            prefix = "story_" + str(story_no) 
-            get_img(story.thumbnail_url,args.destination,prefix)
-            story_no += 1
+        story_no = 1
+        for story in story_info: 
+            if story.video_url: 
+                prefix = user + "_story_" + str(story_no) 
+                get_video(story.video_url,args.destination,prefix) 
+                story_no += 1
+
+            elif story.thumbnail_url: 
+                prefix = user + "_story_" + str(story_no) 
+                get_img(story.thumbnail_url,args.destination,prefix)
+                story_no += 1
 
 if args.saved:
 

@@ -28,7 +28,6 @@ def get_video(url,dest,prefix=""):
         file_name = prefix + ".mp4"
     else:
         file_name = rand_gen() + ".mp4" 
-
     if dest:
         file_name = os.path.join(dest,file_name) 
 
@@ -42,7 +41,6 @@ def get_img(url,dest,prefix=""):
         file_name = prefix + ".jpg"
     else:
         file_name = rand_gen() + ".jpg" 
-
     if dest:
         file_name = os.path.join(dest,file_name) 
 

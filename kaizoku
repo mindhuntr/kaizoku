@@ -51,7 +51,11 @@ def parse():
 
     parser = ArgumentParser() 
     parser.add_argument('url',type=str,help="url of media",nargs='*') 
-    parser.add_argument('-ga','--get-all-stories', type=str, help="usernames from which to download all stories",nargs="*") 
+    parser.add_argument('-u','--user',type=str,help="instagram username",nargs="*")
+    parser.add_argument('-ga','--get-all-stories',action="store_true", help="download all stories from username") 
+    parser.add_argument('-gp','--get-posts',type=int,help='fetches posts from user starting from the latest (0 would fetch all)')
+    parser.add_argument('-gv','--get-videos',type=int,help='fetches videos from user starting from the latest (0 would fetch all)') 
+    parser.add_argument('-gi','--get-images',type=int,help='fetches images from user starting from the latest (0 would fetch all)') 
     parser.add_argument('-s','--saved', type=int,help='the number of posts to fetch from saved messages (0 would fetch all)') 
     parser.add_argument('-d','--destination', type=str,help="the directory in which to save downloaded files",nargs="?") 
     parser.add_argument('--cookies-from-browser', type=str,help="name of the browser from which to import cookies") 
@@ -130,7 +134,7 @@ if args.url:
 
 if args.get_all_stories:
 
-    for user in args.get_all_stories:
+    for user in args.user:
 
         userinfo = cl.user_info_by_username(user) 
         story_info = cl.user_stories(userinfo.pk) 
@@ -146,6 +150,74 @@ if args.get_all_stories:
                 prefix = user + "_story_" + str(story_no) 
                 get_img(story.thumbnail_url,args.destination,prefix)
                 story_no += 1
+
+if args.get_videos:
+
+    if args.user:
+        for user in args.user: 
+            user_info = cl.user_info_by_username(user) 
+            user_medias = cl.user_medias_v1(user_info.pk,amount=args.get_videos)
+            
+            video_no = 1
+            for media in user_medias: 
+                if media.media_type == 2: 
+                    prefix = user + "_video_" + str(video_no) 
+                    get_video(media.video_url,args.destination,prefix) 
+                    video_no += 1
+    else:
+        print("argument requires --user") 
+
+if args.get_images:
+
+    if args.user:
+        for user in args.user: 
+            user_info = cl.user_info_by_username(user) 
+            user_medias = cl.user_medias_v1(user_info.pk,amount=args.get_images)
+            
+            image_no = 1
+            for media in user_medias: 
+                if media.media_type == 1: 
+                    prefix = user + "_image_" + str(image_no) 
+                    get_img(media.thumbnail_url,args.destination,prefix) 
+                    image_no += 1
+    else:
+        print("argument requires --user") 
+
+if args.get_posts:
+
+    if args.user:
+        for user in args.user: 
+            user_info = cl.user_info_by_username(user) 
+            user_medias = cl.user_medias_v1(user_info.pk,amount=args.get_posts)
+            
+            post_no = 1
+            for media in user_medias: 
+                if media.media_type == 2: 
+                    prefix = user + "_post_" + str(post_no) 
+                    get_video(media.video_url,args.destination,prefix) 
+                    post_no += 1
+
+                if media.media_type == 1:
+                    prefix = user + "_post_" + str(post_no) 
+                    get_img(media.thumbnail_url,args.destination,prefix) 
+                    post_no += 1
+
+                if media.media_type == 8: 
+                    album_no = 1
+                    for element in media.resources: 
+                        if element.media_type == 1: 
+                            prefix = user + "_post_" + str(post_no) + "_" + str(album_no)
+                            get_img(element.thumbnail_url,args.destination,prefix)
+                            album_no += 1
+
+                        if element.media_type == 2: 
+                            prefix = user + "_post_" + str(post_no) + "_" + str(album_no)
+                            get_video(element.video_url,args.destination,prefix) 
+                            album_no += 1 
+                    post_no += 1
+    else:
+        print("argument requires --user") 
+
 
 if args.saved:
 
